@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Ubuntu 26.04 — Bluetooth Off & Power Saver at Startup</title>
+<style>
+:root {
+  --bg:#f4f6fb; --panel:#ffffff; --text:#172033; --muted:#596579;
+  --line:#dce3ef; --accent:#5b5bd6; --accent2:#e9eaff; --code:#111827;
+  --code-text:#e5edf9; --green:#16794b; --green-bg:#e7f7ee;
+  --amber:#8a5a00; --amber-bg:#fff4d7; --shadow:0 12px 32px rgba(22,32,51,.08);
+}
+@media(prefers-color-scheme:dark){
+:root{--bg:#101522;--panel:#171f30;--text:#edf2ff;--muted:#b1bdd2;--line:#303b50;--accent:#a6a5ff;--accent2:#29294c;--code:#080d16;--code-text:#e5edf9;--green:#7be0ac;--green-bg:#123627;--amber:#ffd27a;--amber-bg:#382b12;--shadow:0 12px 32px rgba(0,0,0,.22)}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 18px 64px}
+.hero{background:linear-gradient(135deg,#24245e,#5655cf 58%,#8584f5);color:#fff;border-radius:24px;padding:36px 32px;box-shadow:var(--shadow)}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;font-weight:800;opacity:.85}
+h1{font-size:clamp(2rem,5vw,3.25rem);line-height:1.12;letter-spacing:-.035em;margin:12px 0}
+.hero p{font-size:1.08rem;max-width:760px;color:#eeefff}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.pill{font-size:.82rem;padding:6px 10px;border:1px solid #ffffff55;border-radius:999px;background:#ffffff14}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;margin-top:24px}
+nav,.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+nav{padding:18px;align-self:start;position:sticky;top:16px}
+nav strong{display:block;margin-bottom:8px}
+nav a{display:block;color:var(--muted);text-decoration:none;padding:6px 0;font-size:.92rem}
+nav a:hover{color:var(--accent)}
+main{min-width:0}
+.card{padding:24px;margin-bottom:18px}
+h2{font-size:1.45rem;line-height:1.25;letter-spacing:-.02em;margin:0 0 12px}
+h3{font-size:1.05rem;margin:22px 0 8px}
+p{margin:8px 0 12px}
+.muted{color:var(--muted)}
+.note{padding:14px 16px;border-radius:12px;background:var(--accent2);margin:14px 0}
+.success{padding:14px 16px;border-radius:12px;background:var(--green-bg);color:var(--text);margin:14px 0}
+.warning{padding:14px 16px;border-radius:12px;background:var(--amber-bg);margin:14px 0}
+pre{position:relative;overflow:auto;background:var(--code);color:var(--code-text);padding:18px;border-radius:12px;font: .88rem/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.inline{background:var(--accent2);padding:2px 5px;border-radius:5px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.94rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-size:.82rem;text-transform:uppercase;letter-spacing:.04em}
+.step{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--accent);color:#fff;font-weight:800;margin-right:8px}
+.checklist{list-style:none;padding:0}
+.checklist li{padding:8px 0}
+.checklist li::before{content:"✓";font-weight:900;color:var(--green);margin-right:10px}
+footer{color:var(--muted);font-size:.9rem;text-align:center;padding:20px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}nav{position:static}.hero{padding:28px 22px}.card{padding:19px}}
+@media print{body{background:#fff;color:#111}.wrap{max-width:none;padding:0}.hero{box-shadow:none;print-color-adjust:exact}.layout{display:block}nav{display:none}.card{box-shadow:none;break-inside:avoid;border:1px solid #ccc}.hero{border-radius:0}a{color:inherit}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <div class="eyebrow">Ubuntu troubleshooting guide</div>
+  <h1>Bluetooth Off + Power Saver at Every Startup</h1>
+  <p>A practical, step-by-step record of the fix for Ubuntu 26.04.1 LTS on a Dell Inspiron 14 5418 using TLP 1.10.2.</p>
+  <div class="pills">
+    <span class="pill">Ubuntu 26.04.1 LTS</span>
+    <span class="pill">TLP 1.10.2</span>
+    <span class="pill">Bluetooth disabled by default</span>
+    <span class="pill">Power Saver on AC & battery</span>
+  </div>
+</header>
+
+<div class="layout">
+<nav aria-label="Contents">
+  <strong>On this page</strong>
+  <a href="#symptoms">1. Problem and goal</a>
+  <a href="#inspect">2. Inspect the system</a>
+  <a href="#power">3. Configure TLP</a>
+  <a href="#bluetooth">4. Disable Bluetooth at startup</a>
+  <a href="#apply">5. Apply the changes</a>
+  <a href="#verify">6. Verify after reboot</a>
+  <a href="#troubleshoot">7. Troubleshooting</a>
+  <a href="#undo">8. Undo the Bluetooth service</a>
+</nav>
+
+<main>
+<section class="card" id="symptoms">
+<h2><span class="step">1</span>Problem and intended result</h2>
+<p>On this laptop, each fresh startup restored Bluetooth to On and selected Performance while connected to AC power, or Balanced while running on battery. The goal was to make the preferred state persist across shutdowns and restarts.</p>
+<table>
+<thead><tr><th>Setting</th><th>Desired state</th></tr></thead>
+<tbody>
+<tr><td>Bluetooth</td><td>Off (software-blocked) after startup</td></tr>
+<tr><td>TLP power profile</td><td>Power Saver on AC and battery</td></tr>
+<tr><td>Firmware platform profile</td><td><code>quiet</code></td></tr>
+<tr><td>CPU energy-performance preference</td><td><code>power</code></td></tr>
+</tbody>
+</table>
+<div class="note"><strong>Important distinction:</strong> TLP's <code>quiet</code> platform profile is a firmware-level setting; it is not itself the same thing as the “Power Saver” label in GNOME Quick Settings. In this setup, <code>tlpctl get</code> is the check for the active TLP profile.</div>
+</section>
+
+<section class="card" id="inspect">
+<h2><span class="step">2</span>Inspect the existing setup first</h2>
+<p>Before changing anything, identify which power manager is active. These commands are diagnostic and do not change settings.</p>
+<pre><code>lsb_release -ds
+
+rfkill list bluetooth
+systemctl is-enabled bluetooth.service
+systemctl is-enabled systemd-rfkill.service 2>/dev/null
+
+systemctl is-active tlp.service
+systemctl is-active power-profiles-daemon.service
+systemctl is-active tuned.service
+
+sudo tlp-stat -p
+command -v powerprofilesctl || echo "powerprofilesctl not installed"
+
+dpkg -l | grep -E 'tlp|power-profiles-daemon|tuned'</code></pre>
+<p>On the system covered by this guide, the relevant findings were:</p>
+<ul>
+<li>Ubuntu 26.04.1 LTS and TLP 1.10.2 were installed.</li>
+<li>TLP was active; <code>power-profiles-daemon</code> and <code>tuned</code> were inactive.</li>
+<li><code>tlp-pd</code> was installed, providing the desktop integration for TLP power profiles.</li>
+<li>The available firmware profiles were <code>cool quiet balanced performance</code>.</li>
+<li>Initially, Bluetooth was unblocked and the firmware profile was <code>performance</code>.</li>
+</ul>
+<div class="warning"><strong>Do not run two competing power managers.</strong> For this configuration, keep the existing TLP setup and its <code>tlp-pd</code> integration. Do not install or enable another power manager just to try to force the menu label.</div>
+</section>
+
+<section class="card" id="power">
+<h2><span class="step">3</span>Configure TLP for Power Saver on AC and battery</h2>
+<p>Back up the TLP configuration file before editing it:</p>
+<pre><code>sudo cp /etc/tlp.conf /etc/tlp.conf.backup
+sudo nano /etc/tlp.conf</code></pre>
+<p>In <code>/etc/tlp.conf</code>, edit existing entries if they are present. Do not leave duplicate active definitions. Set the following values:</p>
+<pre><code>TLP_PROFILE_AC=SAV
+TLP_PROFILE_BAT=SAV
+
+PLATFORM_PROFILE_ON_AC=quiet
+PLATFORM_PROFILE_ON_BAT=quiet
+
+CPU_ENERGY_PERF_POLICY_ON_AC=power
+CPU_ENERGY_PERF_POLICY_ON_BAT=power
+
+PLATFORM_PROFILE_ON_SAV=quiet
+CPU_ENERGY_PERF_POLICY_ON_SAV=power</code></pre>
+<p>Save in Nano with <code>Ctrl+O</code>, press <code>Enter</code>, then exit with <code>Ctrl+X</code>.</p>
+<div class="note"><strong>What these options do:</strong> <code>TLP_PROFILE_AC=SAV</code> and <code>TLP_PROFILE_BAT=SAV</code> request TLP's Power Saver profile for both power sources. The platform-profile and CPU energy-preference options request lower-power settings. Actual hardware support and the GNOME label can vary.</div>
+<p>Apply the configuration:</p>
+<pre><code>sudo tlp start
+tlpctl get
+sudo tlp-stat -p</code></pre>
+<p>The successful output in this case included:</p>
+<pre><code>TLP started using profile power-saver/SAV (auto).
+power-saver</code></pre>
+<p>And in the platform section:</p>
+<pre><code>/sys/firmware/acpi/platform_profile = quiet</code></pre>
+<p>And in the processor section:</p>
+<pre><code>/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference = power</code></pre>
+</section>
+
+<section class="card" id="bluetooth">
+<h2><span class="step">4</span>Make Bluetooth stay off at startup</h2>
+<p>The system initially reported Bluetooth as not blocked. A small systemd oneshot service was created to software-block Bluetooth during startup.</p>
+<p>Create the service file:</p>
+<pre><code>sudo tee /etc/systemd/system/bluetooth-off.service &gt; /dev/null &lt;&lt;'EOF'
+[Unit]
+Description=Block Bluetooth at startup
+After=bluetooth.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/rfkill block bluetooth
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF</code></pre>
+<p>Reload systemd and enable/start the service:</p>
+<pre><code>sudo systemctl daemon-reload
+sudo systemctl enable --now bluetooth-off.service
+rfkill list bluetooth</code></pre>
+<p>Expected result:</p>
+<pre><code>Soft blocked: yes
+Hard blocked: no</code></pre>
+<div class="note"><strong>Meaning:</strong> “Soft blocked: yes” means Linux has disabled the Bluetooth radio in software. “Hard blocked: no” means no hardware switch or firmware hard block is reported. You can turn Bluetooth back on manually when you need it; this service applies the block at startup rather than continuously preventing manual use.</div>
+</section>
+
+<section class="card" id="apply">
+<h2><span class="step">5</span>Check the service and saved configuration</h2>
+<p>Confirm that the Bluetooth service is enabled and inspect the active TLP settings:</p>
+<pre><code>systemctl is-enabled bluetooth-off.service
+systemctl status bluetooth-off.service --no-pager
+
+sudo tlp-stat -c | grep -E 'TLP_PROFILE_|PLATFORM_PROFILE_ON_|CPU_ENERGY_PERF_POLICY_ON_'
+
+tlpctl get
+rfkill list bluetooth</code></pre>
+<p>The first command should return <code>enabled</code>. The TLP configuration should contain the requested values for AC and battery, and <code>tlpctl get</code> should return <code>power-saver</code>.</p>
+</section>
+
+<section class="card" id="verify">
+<h2><span class="step">6</span>Verify after a complete reboot</h2>
+<p>Restart the laptop. After logging back in, run:</p>
+<pre><code>tlpctl get
+rfkill list bluetooth
+sudo tlp-stat -p</code></pre>
+<p>For this laptop, the post-reboot output confirmed all three items:</p>
+<pre><code>power-saver
+
+Soft blocked: yes
+Hard blocked: no
+
+/sys/firmware/acpi/platform_profile = quiet
+/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference = power</code></pre>
+<div class="success"><strong>Verified on the documented system:</strong> TLP returned <code>power-saver</code>, Bluetooth remained software-blocked, the firmware platform profile was <code>quiet</code>, and the CPU energy preference was <code>power</code> after reboot.</div>
+<p>For full verification, also inspect GNOME Quick Settings once with the charger connected and once on battery. If the menu label disagrees with <code>tlpctl get</code>, treat that as a separate desktop-integration issue; the terminal output alone does not prove which label GNOME displays.</p>
+</section>
+
+<section class="card" id="troubleshoot">
+<h2><span class="step">7</span>Troubleshooting notes</h2>
+<h3>If Bluetooth is on after reboot</h3>
+<pre><code>systemctl status bluetooth-off.service --no-pager
+journalctl -u bluetooth-off.service -b --no-pager
+rfkill list bluetooth</code></pre>
+<p>Check that the service is enabled and has no execution error. The service uses <code>/usr/sbin/rfkill</code>; if that executable is not present at that path on another installation, find its path with <code>command -v rfkill</code> and update <code>ExecStart</code> accordingly.</p>
+<h3>If the active TLP profile is not Power Saver</h3>
+<pre><code>tlpctl get
+sudo tlp-stat -s
+sudo tlp-stat -c
+systemctl status tlp.service --no-pager</code></pre>
+<p>Confirm the AC/BAT profile settings are saved and there are no duplicate active entries in <code>/etc/tlp.conf</code>. Check the current power source as well, since TLP automatically responds to AC/battery changes.</p>
+<h3>If the GNOME menu still says Performance or Balanced</h3>
+<p>Do not install a second power manager immediately. First capture the TLP status, package list, and what the GNOME menu shows. The system's TLP profile and the desktop's displayed label are related but are not identical measurements.</p>
+</section>
+
+<section class="card" id="undo">
+<h2><span class="step">8</span>Undo the Bluetooth startup service (optional)</h2>
+<p>If you later decide you no longer want the automatic Bluetooth block, disable and remove only the service created in this guide:</p>
+<pre><code>sudo systemctl disable --now bluetooth-off.service
+sudo rm /etc/systemd/system/bluetooth-off.service
+sudo systemctl daemon-reload
+sudo systemctl reset-failed</code></pre>
+<p>That removes the custom startup action. It does not necessarily unblock Bluetooth immediately. To unblock it now, run:</p>
+<pre><code>sudo rfkill unblock bluetooth
+rfkill list bluetooth</code></pre>
+<p>To restore the TLP configuration backup, first back up your current file, then restore the saved copy and reapply TLP:</p>
+<pre><code>sudo cp /etc/tlp.conf /etc/tlp.conf.before-restore
+sudo cp /etc/tlp.conf.backup /etc/tlp.conf
+sudo tlp start</code></pre>
+<div class="warning">Restoring the backup also restores any unrelated TLP settings that were in the backup. Review the file first if you made other changes after creating it.</div>
+</section>
+</main>
+</div>
+<footer>
+Prepared as a reproducible guide for the documented Ubuntu 26.04.1 LTS + TLP 1.10.2 setup. Commands and option support can differ on other distributions or TLP versions.
+</footer>
+</div>
+</body>
+</html>
